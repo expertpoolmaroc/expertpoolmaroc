@@ -2,6 +2,7 @@ import Link from "next/link";
 import { siteConfig } from "@/config/site";
 import { navItems } from "@/content/pages";
 import { Logo } from "./Logo";
+import { QuoteLink } from "./QuoteLink";
 
 export function Footer() {
   return (
@@ -34,9 +35,9 @@ export function Footer() {
           <a href={`mailto:${siteConfig.email}`}>{siteConfig.email}</a>
           <a href={`mailto:${siteConfig.serviceEmail}`}>{siteConfig.serviceEmail}</a>
           {siteConfig.address ? <p>{siteConfig.address}</p> : null}
-          <Link className="goldButton small" href="/contact">
+          <QuoteLink className="goldButton small">
             Demander un devis
-          </Link>
+          </QuoteLink>
         </div>
       </div>
       <div className="container footerBottom">

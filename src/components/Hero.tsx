@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { LandingPage } from "@/content/pages";
 import { imageForPage } from "@/content/images";
+import { quoteMailto } from "@/lib/quote";
 
 export function Hero({ page }: { page: LandingPage }) {
   return (
@@ -21,9 +22,11 @@ export function Hero({ page }: { page: LandingPage }) {
         <h1>{page.h1}</h1>
         <p>{page.description}</p>
         <div className="heroActions">
-          <Link className="goldButton" href={`/contact?projet=${encodeURIComponent(page.slug || "piscine-maroc")}`}>
-            {page.cta}
-          </Link>
+          {page.cta.startsWith("Demander un devis") ? (
+            <a className="goldButton" href={quoteMailto(page.slug ? `/${page.slug}` : "/")}>{page.cta}</a>
+          ) : (
+            <Link className="goldButton" href={`/contact?projet=${encodeURIComponent(page.slug || "piscine-maroc")}`}>{page.cta}</Link>
+          )}
           {page.secondaryCta ? (
             <Link className="outlineButton" href={page.secondaryCta.toLowerCase().includes("realisation") ? "/realisations" : "/services"}>
               {page.secondaryCta}

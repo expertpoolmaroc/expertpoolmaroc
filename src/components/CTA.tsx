@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { QuoteLink } from "./QuoteLink";
 
 export function CTA() {
   return (
@@ -8,9 +8,9 @@ export function CTA() {
         <p className="kicker">Un projet ?</p>
           <h2>Discutons d&apos;une solution adaptee a votre espace</h2>
         </div>
-        <Link className="goldButton" href="/contact">
+        <QuoteLink className="goldButton">
           Demander un devis
-        </Link>
+        </QuoteLink>
       </div>
     </section>
   );

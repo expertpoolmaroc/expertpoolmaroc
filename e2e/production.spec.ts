@@ -19,6 +19,10 @@ for (const route of routes) {
     schemas.forEach((schema) => expect(() => JSON.parse(schema)).not.toThrow());
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     expect(errors.filter((error) => /hydration|failed to load/i.test(error))).toEqual([]);
+    const quoteLinks = page.locator("a.goldButton").filter({ hasText: /^Demander un devis/ });
+    for (const link of await quoteLinks.all()) {
+      await expect(link).toHaveAttribute("href", /^mailto:contact@expertpool\.ma\?subject=.+&body=.+/);
+    }
   });
 }
 
@@ -47,6 +51,30 @@ test("validation du formulaire de contact", async ({ page }) => {
   await page.getByRole("button", { name: "Envoyer via WhatsApp" }).click();
   await expect(page.locator('input[name="name"]')).toBeFocused();
 });
+
+for (const [route, expectedSubject] of [
+  ["/", "Demande de devis - Expert Pool Maroc"],
+  ["/construction-piscine-maroc", "Demande de devis construction piscine - Expert Pool Maroc"],
+  ["/entretien-piscine-maroc", "Demande de devis entretien piscine - Expert Pool Maroc"],
+  ["/equipement-piscine-maroc", "Demande de devis équipements piscine - Expert Pool Maroc"],
+  ["/spa-jacuzzi-maroc", "Demande de devis Spa et Jacuzzi - Expert Pool Maroc"],
+] as const) {
+  test(`liens devis contextualisés ${route} sur desktop et mobile`, async ({ page }) => {
+    for (const width of [1440, 390]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(route);
+      const visibleLinks = page.locator('a.goldButton[href^="mailto:"]').filter({ hasText: "Demander un devis" });
+      expect(await visibleLinks.count()).toBeGreaterThanOrEqual(2);
+      for (const link of await visibleLinks.all()) {
+        const url = new URL((await link.getAttribute("href"))!);
+        expect(url.pathname).toBe("contact@expertpool.ma");
+        expect(url.searchParams.get("subject")).toBe(expectedSubject);
+        expect(url.searchParams.get("body")).toContain("Page : ");
+      }
+      await expect(page.locator(".whatsappFloat")).toHaveAttribute("href", /wa\.me\/212660628760/);
+    }
+  });
+}
 
 for (const width of [320, 360, 375, 390, 412, 430, 768, 1024, 1280, 1366, 1440, 1920]) {
   test(`aucun débordement horizontal à ${width}px`, async ({ page }) => {

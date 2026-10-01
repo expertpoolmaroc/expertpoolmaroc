@@ -3,6 +3,7 @@ import { navItems } from "@/content/pages";
 import { Logo } from "./Logo";
 import { MessageCircle, Menu } from "lucide-react";
 import { whatsappHref } from "@/config/site";
+import { QuoteLink } from "./QuoteLink";
 
 export function Header() {
   return (
@@ -20,9 +21,9 @@ export function Header() {
             </Link>
           ))}
         </nav>
-        <Link className="goldButton small" href="/contact">
+        <QuoteLink className="goldButton small">
           Demander un devis
-        </Link>
+        </QuoteLink>
         <details className="mobileNav">
           <summary aria-label="Ouvrir le menu" title="Menu"><Menu size={23} /></summary>
           <div>
@@ -31,9 +32,9 @@ export function Header() {
                 {item.label}
               </Link>
             ))}
-            <Link className="goldButton" href="/contact">
+            <QuoteLink className="goldButton">
               Demander un devis
-            </Link>
+            </QuoteLink>
             <a href="tel:+212660628760">+212 660 628 760</a>
           </div>
         </details>
