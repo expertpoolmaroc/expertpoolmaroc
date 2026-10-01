@@ -21,7 +21,7 @@ for (const route of routes) {
     expect(errors.filter((error) => /hydration|failed to load/i.test(error))).toEqual([]);
     const quoteLinks = page.locator("a.goldButton").filter({ hasText: /^Demander un devis/ });
     for (const link of await quoteLinks.all()) {
-      await expect(link).toHaveAttribute("href", /^mailto:contact@expertpool\.ma\?subject=.+&body=.+/);
+      await expect(link).toHaveAttribute("href", /^\/contact\?source=.+#formulaire-devis$/);
     }
   });
 }
@@ -48,34 +48,62 @@ test("menu mobile et CTA", async ({ page }) => {
 
 test("validation du formulaire de contact", async ({ page }) => {
   await page.goto("/contact");
-  await page.getByRole("button", { name: "Envoyer via WhatsApp" }).click();
+  await page.getByRole("button", { name: "Envoyer ma demande" }).click();
   await expect(page.locator('input[name="name"]')).toBeFocused();
 });
 
-for (const [route, expectedSubject] of [
-  ["/", "Demande de devis - Expert Pool Maroc"],
-  ["/construction-piscine-maroc", "Demande de devis construction piscine - Expert Pool Maroc"],
-  ["/entretien-piscine-maroc", "Demande de devis entretien piscine - Expert Pool Maroc"],
-  ["/equipement-piscine-maroc", "Demande de devis équipements piscine - Expert Pool Maroc"],
-  ["/spa-jacuzzi-maroc", "Demande de devis Spa et Jacuzzi - Expert Pool Maroc"],
+test("API devis rejette les données invalides et ne confirme pas sans provider", async ({ request }) => {
+  const valid = { name: "Test Site Expert Pool", phone: "+212660628760", email: "test@example.com", city: "Casablanca", projectType: "Test formulaire", message: "Test d'envoi réel depuis le site.", source: "/contact", website: "" };
+  for (const payload of [{ ...valid, name: "" }, { ...valid, email: "bad" }, { ...valid, phone: "123" }]) {
+    expect((await request.post("/api/quote", { data: payload })).status()).toBe(400);
+  }
+  const response = await request.post("/api/quote", { data: valid });
+  expect(response.status()).toBe(503);
+  expect((await response.json()).ok).not.toBe(true);
+});
+
+test("double clic et erreur provider affichent une erreur sans succès", async ({ page }) => {
+  await page.goto("/contact?projet=Fontaine");
+  await expect(page.locator('select[name="projectType"]')).toHaveValue("Fontaine");
+  await page.locator('input[name="name"]').fill("Test Site Expert Pool");
+  await page.locator('input[name="phone"]').fill("+212660628760");
+  await page.locator('input[name="email"]').fill("test@example.com");
+  await page.locator('input[name="city"]').fill("Casablanca");
+  await page.locator('textarea[name="message"]').fill("Test d'envoi réel depuis le site.");
+  let calls = 0;
+  await page.route("**/api/quote", async (route) => {
+    calls++;
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await route.fulfill({ status: 502, contentType: "application/json", body: JSON.stringify({ error: "Envoi impossible" }) });
+  });
+  const button = page.getByRole("button", { name: "Envoyer ma demande" });
+  await button.dblclick();
+  await expect(page.locator(".formError")).toContainText("Une erreur est survenue");
+  expect(calls).toBe(1);
+  await expect(page.getByText("Votre demande a été envoyée avec succès.")).toHaveCount(0);
+});
+
+for (const [route, project] of [
+  ["/entretien-piscine-maroc", "Entretien piscine"],
+  ["/fontaines-maroc", "Fontaine"],
+  ["/spa-jacuzzi-maroc", "Spa & Jacuzzi"],
+  ["/electricite-plomberie-piscine-maroc", "Électricité & Plomberie piscine"],
+  ["/equipement-piscine-maroc", "Matériel & équipements piscine"],
 ] as const) {
-  test(`liens devis contextualisés ${route} sur desktop et mobile`, async ({ page }) => {
+  test(`liens devis contextualisés ${route}`, async ({ page }) => {
     for (const width of [1440, 390]) {
       await page.setViewportSize({ width, height: 900 });
       await page.goto(route);
-      const visibleLinks = page.locator('a.goldButton[href^="mailto:"]').filter({ hasText: "Demander un devis" });
-      expect(await visibleLinks.count()).toBeGreaterThanOrEqual(2);
-      for (const link of await visibleLinks.all()) {
-        const url = new URL((await link.getAttribute("href"))!);
-        expect(url.pathname).toBe("contact@expertpool.ma");
-        expect(url.searchParams.get("subject")).toBe(expectedSubject);
-        expect(url.searchParams.get("body")).toContain("Page : ");
+      const links = page.locator('a.goldButton[href^="/contact?"]').filter({ hasText: "Demander un devis" });
+      expect(await links.count()).toBeGreaterThanOrEqual(2);
+      for (const link of await links.all()) {
+        const url = new URL((await link.getAttribute("href"))!, "https://piscineexpertpool.com");
+        expect(url.searchParams.get("projet")).toBe(project);
       }
       await expect(page.locator(".whatsappFloat")).toHaveAttribute("href", /wa\.me\/212660628760/);
     }
   });
 }
-
 for (const width of [320, 360, 375, 390, 412, 430, 768, 1024, 1280, 1366, 1440, 1920]) {
   test(`aucun débordement horizontal à ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: width < 768 ? 900 : 1000 });

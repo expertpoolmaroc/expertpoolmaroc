@@ -342,7 +342,8 @@ h3 {
 
 .trustGrid div {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto minmax(0, 1fr);
+  min-width: 0;
   gap: 0 0.75rem;
   align-items: center;
   min-height: 96px;
@@ -364,6 +365,7 @@ h3 {
 .trustGrid small {
   color: var(--soft);
   font-weight: 700;
+  overflow-wrap: anywhere;
 }
 
 .section {
@@ -771,7 +773,7 @@ textarea {
   }
 
   .trustGrid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .trustGrid div {
@@ -841,3 +843,4 @@ textarea {
     animation-duration: 0.001ms !important;
   }
 }
+.honeypot { position: absolute !important; left: -9999px !important; width: 1px !important; height: 1px !important; overflow: hidden !important; }

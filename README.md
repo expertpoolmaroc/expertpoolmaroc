@@ -1,36 +1,21 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Expert Pool Maroc
 
-## Getting Started
+## Demandes de devis
 
-First, run the development server:
+Les boutons « Demander un devis » ouvrent le formulaire `/contact` avec le projet préselectionné. Le formulaire envoie un POST à `/api/quote`. Aucun secret ne doit être préfixé par `NEXT_PUBLIC_`.
+
+Copier les noms de variables de `.env.example` dans les variables **serveur** de Vercel. Configurer `EMAIL_FROM` avec une adresse vérifiée et autorisée par le fournisseur, et `EMAIL_TO=contact@expertpool.ma`. Si `SMTP_HOST`, `SMTP_USER` et `SMTP_PASSWORD` sont définis, l'envoi utilise SMTP. Sinon, il utilise `RESEND_API_KEY`. Sans fournisseur configuré, l'API répond 503 et le formulaire affiche une erreur.
+
+Après configuration, envoyer une vraie demande test à `/api/quote` avec le nom `Test Site Expert Pool`, le téléphone `+212660628760`, un e-mail valide, la ville `Casablanca`, le projet `Test formulaire`, le message `Test d'envoi réel depuis le site.`, la source `/contact` et `website` vide. Vérifier l'arrivée dans la boîte de réception ou conserver l'identifiant retourné par le fournisseur dans la réponse API (`id`). Cet identifiant indique que le fournisseur a accepté le message, pas qu'il a été reçu.
+
+La protection anti-spam comprend un champ honeypot et une limite de cinq tentatives par adresse IP et par heure dans chaque instance serveur. Cette limite en mémoire est locale à une instance ; pour une limite globale sur plusieurs instances Vercel, connecter un stockage partagé avant d'augmenter le trafic.
+
+## Vérification
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run lint
+npm run typecheck
+npm run test
+npm run test:e2e
+npm run build
 ```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
