@@ -41,12 +41,18 @@ export function ContactForm() {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...data, source: new URLSearchParams(window.location.search).get("source") || window.location.pathname }),
       });
-      if (!response.ok) throw new Error("Delivery failed");
+      if (!response.ok) {
+        const result: unknown = await response.json().catch(() => null);
+        const message = result && typeof result === "object" && "error" in result && typeof result.error === "string"
+          ? result.error
+          : "Une erreur est survenue. Veuillez réessayer ou nous contacter par WhatsApp.";
+        throw new Error(message);
+      }
       setSuccess(true);
       form.reset();
       setSelectedProject("");
-    } catch {
-      setError("Une erreur est survenue. Veuillez réessayer ou nous contacter par WhatsApp.");
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Une erreur est survenue. Veuillez réessayer ou nous contacter par WhatsApp.");
     } finally {
       inFlight.current = false;
       setSending(false);

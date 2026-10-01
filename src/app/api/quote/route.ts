@@ -27,7 +27,10 @@ export async function POST(request: Request) {
 
   const from = process.env.EMAIL_FROM;
   const to = process.env.EMAIL_TO || "contact@expertpool.ma";
-  if (!from || to !== "contact@expertpool.ma") return Response.json({ error: "Service indisponible" }, { status: 503 });
+  if (!from || to !== "contact@expertpool.ma") {
+    console.error("Quote delivery is not configured: EMAIL_FROM or EMAIL_TO is invalid");
+    return Response.json({ error: "L'envoi par e-mail est momentanément indisponible. Contactez-nous par WhatsApp." }, { status: 503 });
+  }
   const { subject, text } = quoteEmail(quote);
   try {
     let id: string | undefined;
@@ -51,10 +54,13 @@ export async function POST(request: Request) {
       const result = await response.json();
       if (typeof result.id !== "string" || !result.id) throw new Error("Provider did not accept email");
       id = result.id;
-    } else return Response.json({ error: "Service indisponible" }, { status: 503 });
+    } else {
+      console.error("Quote delivery is not configured: SMTP or RESEND_API_KEY is required");
+      return Response.json({ error: "L'envoi par e-mail est momentanément indisponible. Contactez-nous par WhatsApp." }, { status: 503 });
+    }
     return Response.json({ ok: true, id });
   } catch (error) {
     console.error("Quote delivery failed", error);
-    return Response.json({ error: "Envoi impossible" }, { status: 502 });
+    return Response.json({ error: "L'e-mail n'a pas pu être envoyé. Réessayez ou contactez-nous par WhatsApp." }, { status: 502 });
   }
 }
