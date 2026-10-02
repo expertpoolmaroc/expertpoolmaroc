@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { isMoroccanPhone } from "@/lib/contact";
 
@@ -9,10 +9,7 @@ const projectTypes = ["Piscine", "Construction piscine", "Rénovation piscine", 
 
 export function ContactForm() {
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
-  const [sending, setSending] = useState(false);
   const [selectedProject, setSelectedProject] = useState("");
-  const inFlight = useRef(false);
   const [project, setProject] = useState("");
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -23,40 +20,27 @@ export function ContactForm() {
     return () => window.clearTimeout(timer);
   }, []);
 
-  async function submit(event: FormEvent<HTMLFormElement>) {
+  function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (inFlight.current) return;
     const form = event.currentTarget;
     const data = Object.fromEntries(new FormData(form).entries());
     if (!isMoroccanPhone(String(data.phone || ""))) {
       setError("Veuillez saisir un numéro de téléphone marocain valide.");
       return;
     }
-    inFlight.current = true;
-    setSending(true);
     setError("");
-    setSuccess(false);
-    try {
-      const response = await fetch("/api/quote", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, source: new URLSearchParams(window.location.search).get("source") || window.location.pathname }),
-      });
-      if (!response.ok) {
-        const result: unknown = await response.json().catch(() => null);
-        const message = result && typeof result === "object" && "error" in result && typeof result.error === "string"
-          ? result.error
-          : "Une erreur est survenue. Veuillez réessayer ou nous contacter par WhatsApp.";
-        throw new Error(message);
-      }
-      setSuccess(true);
-      form.reset();
-      setSelectedProject("");
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "Une erreur est survenue. Veuillez réessayer ou nous contacter par WhatsApp.");
-    } finally {
-      inFlight.current = false;
-      setSending(false);
-    }
+    const source = new URLSearchParams(window.location.search).get("source") || window.location.pathname;
+    const message = [
+      "Bonjour, je souhaite demander un devis.",
+      `Nom : ${data.name}`,
+      `Téléphone : ${data.phone}`,
+      `E-mail : ${data.email}`,
+      `Ville : ${data.city}`,
+      `Type de projet : ${data.projectType}`,
+      `Message : ${data.message}`,
+      `Page d'origine : ${source}`,
+    ].join("\n");
+    window.location.assign(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`);
   }
 
   return (
@@ -70,11 +54,9 @@ export function ContactForm() {
           <label>Ville<input name="city" autoComplete="address-level2" required maxLength={120} placeholder="Votre ville" /></label>
           <label className="full">Type de projet<select name="projectType" required value={selectedProject} onChange={(event) => setSelectedProject(event.target.value)}><option value="" disabled>Sélectionnez un type de projet</option>{[...new Set([...projectTypes, project].filter(Boolean))].map((item) => <option key={item}>{item}</option>)}</select></label>
           <label className="full">Message<textarea name="message" required maxLength={5000} rows={5} placeholder="Besoins, dimensions, contraintes ou calendrier..." /></label>
-          <label className="honeypot" aria-hidden="true">Site web<input name="website" tabIndex={-1} autoComplete="off" /></label>
           {error ? <p className="formError full" role="alert">{error}</p> : null}
-          {success ? <p className="full" role="status">Votre demande a été envoyée avec succès. Notre équipe vous contactera rapidement.</p> : null}
-          <button className="goldButton full" type="submit" disabled={sending}>{sending ? "Envoi en cours..." : "Envoyer ma demande"}</button>
-          <p className="formNote full">Vous préférez WhatsApp ? <a href={`https://wa.me/${whatsappNumber}`} target="_blank" rel="noopener noreferrer">Contactez-nous directement.</a></p>
+          <button className="goldButton full" type="submit">Continuer sur WhatsApp</button>
+          <p className="formNote full">Votre message s’ouvrira dans WhatsApp. Appuyez sur Envoyer pour nous le transmettre.</p>
         </form>
         <aside className="contactPanel">
           <p className="kicker">Nos coordonnées</p><h2>Parlons de votre projet</h2>

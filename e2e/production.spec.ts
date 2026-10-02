@@ -48,7 +48,7 @@ test("menu mobile et CTA", async ({ page }) => {
 
 test("validation du formulaire de contact", async ({ page }) => {
   await page.goto("/contact");
-  await page.getByRole("button", { name: "Envoyer ma demande" }).click();
+  await page.getByRole("button", { name: "Continuer sur WhatsApp" }).click();
   await expect(page.locator('input[name="name"]')).toBeFocused();
 });
 
@@ -62,7 +62,7 @@ test("API devis rejette les données invalides et ne confirme pas sans provider"
   expect((await response.json()).ok).not.toBe(true);
 });
 
-test("double clic et erreur provider affichent une erreur sans succès", async ({ page }) => {
+test("le formulaire ouvre WhatsApp avec les détails du projet", async ({ page }) => {
   await page.goto("/contact?projet=Fontaine");
   await expect(page.locator('select[name="projectType"]')).toHaveValue("Fontaine");
   await page.locator('input[name="name"]').fill("Test Site Expert Pool");
@@ -70,17 +70,17 @@ test("double clic et erreur provider affichent une erreur sans succès", async (
   await page.locator('input[name="email"]').fill("test@example.com");
   await page.locator('input[name="city"]').fill("Casablanca");
   await page.locator('textarea[name="message"]').fill("Test d'envoi réel depuis le site.");
-  let calls = 0;
-  await page.route("**/api/quote", async (route) => {
-    calls++;
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    await route.fulfill({ status: 502, contentType: "application/json", body: JSON.stringify({ error: "Envoi impossible" }) });
+  let destination = "";
+  await page.route("https://wa.me/**", async (route) => {
+    destination = route.request().url();
+    await route.fulfill({ status: 200, contentType: "text/html", body: "WhatsApp" });
   });
-  const button = page.getByRole("button", { name: "Envoyer ma demande" });
-  await button.dblclick();
-  await expect(page.locator(".formError")).toContainText("Une erreur est survenue");
-  expect(calls).toBe(1);
-  await expect(page.getByText("Votre demande a été envoyée avec succès.")).toHaveCount(0);
+  await page.getByRole("button", { name: "Continuer sur WhatsApp" }).click();
+  await expect.poll(() => destination).toContain("https://wa.me/212660628760?");
+  const message = new URL(destination).searchParams.get("text") || "";
+  expect(message).toContain("Nom : Test Site Expert Pool");
+  expect(message).toContain("Type de projet : Fontaine");
+  expect(message).toContain("Message : Test d'envoi réel depuis le site.");
 });
 
 for (const [route, project] of [

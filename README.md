@@ -2,7 +2,9 @@
 
 ## Demandes de devis
 
-Les boutons « Demander un devis » ouvrent le formulaire `/contact` avec le projet préselectionné. Le formulaire envoie un POST à `/api/quote`. Aucun secret ne doit être préfixé par `NEXT_PUBLIC_`.
+Les boutons « Demander un devis » ouvrent le formulaire `/contact` avec le projet présélectionné. Le bouton « Continuer sur WhatsApp » ouvre une conversation avec les informations du formulaire préremplies. Le visiteur doit appuyer sur « Envoyer » dans WhatsApp pour transmettre sa demande.
+
+L'ancienne API `/api/quote` reste disponible, mais le formulaire public ne l'utilise plus. Les instructions ci-dessous concernent cette API uniquement.
 
 Copier les noms de variables de `.env.example` dans les variables **serveur** de Vercel. Configurer `EMAIL_FROM` avec une adresse vérifiée et autorisée par le fournisseur, et `EMAIL_TO=contact@expertpool.ma`. Si `SMTP_HOST`, `SMTP_USER` et `SMTP_PASSWORD` sont définis, l'envoi utilise SMTP. Sinon, il utilise `RESEND_API_KEY`. Sans fournisseur configuré, l'API répond 503 et le formulaire affiche une erreur.
 
