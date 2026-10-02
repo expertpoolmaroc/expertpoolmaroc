@@ -29,8 +29,9 @@ test("content avoids unconfirmed vanity numbers and public prices", () => {
   assert.doesNotMatch(pagesSource, /\+15 ans|500\+|800 DH|1 200 DH|1 800 DH/);
 });
 
-test("site URL and contact details are centrally configured", () => {
-  assert.match(configSource, /NEXT_PUBLIC_SITE_URL/);
+test("canonical site URL and contact details are centrally configured", () => {
+  assert.match(configSource, /url: "https:\/\/piscineexpertpool\.com"/);
+  assert.doesNotMatch(configSource, /NEXT_PUBLIC_SITE_URL/);
   assert.match(configSource, /NEXT_PUBLIC_PHONE/);
   assert.match(configSource, /NEXT_PUBLIC_WHATSAPP/);
   assert.match(configSource, /NEXT_PUBLIC_EMAIL/);

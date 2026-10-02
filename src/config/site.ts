@@ -1,7 +1,7 @@
 export const siteConfig = {
   name: "Expert Pool Maroc",
   tagline: "Piscines, spa, fontaines et bien-etre",
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://piscineexpertpool.com",
+  url: "https://piscineexpertpool.com",
   phone: process.env.NEXT_PUBLIC_PHONE ?? "+212 660 628 760",
   whatsapp: process.env.NEXT_PUBLIC_WHATSAPP ?? "+212660628760",
   email: process.env.NEXT_PUBLIC_EMAIL ?? "contact@expertpool.ma",
